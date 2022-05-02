@@ -14,11 +14,26 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
+import 'app_config.dart';
 import 'buzzword_bingo_app.dart';
+import 'firebase/dev/firebase_options.dart';
 
-void main() {
-  runApp(const BuzzwordBingoApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  // 1
+  const configuredApp = AppConfig(
+    child: BuzzwordBingoApp(),
+    // 2
+    environment: Environment.dev,
+    // 3
+    appTitle: '[DEV] BuzzwordBingo',
+  );
+  // 4
+  runApp(configuredApp);
 }

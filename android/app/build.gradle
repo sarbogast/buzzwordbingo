@@ -60,11 +60,12 @@ android {
 
     defaultConfig {
         applicationId "com.epseelon.buzzwordbingo"
-        minSdkVersion flutter.minSdkVersion
+        minSdkVersion 19
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
         // TODO: enable multidex here
+        multiDexEnabled true
     }
 
     buildTypes {
@@ -76,6 +77,23 @@ android {
     }
 
     // TODO: insert flavor configuration here
+    // 1
+    flavorDimensions "env"
+
+    // 2
+    productFlavors {
+        // 3
+        dev {
+            dimension "env"
+            applicationIdSuffix ".dev"
+            resValue "string", "app_name", "[DEV] BuzzwordBingo"
+        }
+        // 4
+        prod {
+            dimension "env"
+            resValue "string", "app_name", "BuzzwordBingo"
+        }
+    }
 }
 
 flutter {
@@ -85,4 +103,5 @@ flutter {
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     // TODO: multidex dependency here
+    implementation 'com.android.support:multidex:1.0.3'
 }

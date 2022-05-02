@@ -14,23 +14,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+
 import 'app_config.dart';
-import 'buzzword_bingo_screen.dart';
+import 'buzzword_bingo_app.dart';
+import 'firebase/prod/firebase_options.dart';
 
-class BuzzwordBingoApp extends StatelessWidget {
-  const BuzzwordBingoApp({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      // TODO: replace with AppConfig-extracted app title
-      title: AppConfig.of(context).appTitle,
-      theme: ThemeData(
-        primarySwatch: Colors.green,
-      ),
-      home: const BuzzwordBingoScreen(),
-    );
-  }
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  const configuredApp = AppConfig(
+    child: BuzzwordBingoApp(),
+    // 1
+    environment: Environment.prod,
+    // 2
+    appTitle: 'BuzzwordBingo',
+  );
+  runApp(configuredApp);
 }

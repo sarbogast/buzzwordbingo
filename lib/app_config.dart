@@ -14,23 +14,34 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 import 'package:flutter/material.dart';
-import 'app_config.dart';
-import 'buzzword_bingo_screen.dart';
 
-class BuzzwordBingoApp extends StatelessWidget {
-  const BuzzwordBingoApp({Key? key}) : super(key: key);
+// 1
+enum Environment { dev, prod }
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      // TODO: replace with AppConfig-extracted app title
-      title: AppConfig.of(context).appTitle,
-      theme: ThemeData(
-        primarySwatch: Colors.green,
-      ),
-      home: const BuzzwordBingoScreen(),
-    );
+// 2
+class AppConfig extends InheritedWidget {
+  // 3
+  final Environment environment;
+  final String appTitle;
+
+  // 4
+  const AppConfig({
+    Key? key,
+    required Widget child,
+    required this.environment,
+    required this.appTitle,
+  }) : super(
+          key: key,
+          child: child,
+        );
+
+  // 5
+  static AppConfig of(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<AppConfig>()!;
   }
+
+  // 6
+  @override
+  bool updateShouldNotify(covariant InheritedWidget oldWidget) => false;
 }

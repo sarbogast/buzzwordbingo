@@ -15,8 +15,10 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
+import 'app_config.dart';
 import 'buzzword.dart';
 
 class BuzzwordBingoScreen extends StatefulWidget {
@@ -28,12 +30,8 @@ class BuzzwordBingoScreen extends StatefulWidget {
 
 class _BuzzwordBingoScreenState extends State<BuzzwordBingoScreen> {
   // TODO: Add Firestore properties here
-  final List<Buzzword> _buzzwords = [
-    Buzzword(word: 'revolution', count: 3),
-    Buzzword(word: 'amazing', count: 5),
-    Buzzword(word: 'best', count: 2),
-  ];
-  late StreamController<List<Buzzword>> _buzzwordsStreamController;
+  final _firestore = FirebaseFirestore.instance;
+  late CollectionReference<Map<String, dynamic>> _buzzwordsCollection;
   late Stream<List<Buzzword>> _buzzwordsStream;
   final _wordController = TextEditingController();
 
@@ -44,9 +42,20 @@ class _BuzzwordBingoScreenState extends State<BuzzwordBingoScreen> {
   }
 
   Stream<List<Buzzword>> _watchBuzzwords() {
-    _buzzwordsStreamController = StreamController<List<Buzzword>>();
-    _buzzwordsStreamController.add(_buzzwords);
-    return _buzzwordsStreamController.stream;
+    // 1
+    _buzzwordsCollection = _firestore.collection('buzzwords');
+    // 2
+    return _buzzwordsCollection.orderBy('word').snapshots().map((snapshot) {
+      // 3
+      return snapshot.docs.map((document) {
+        // 4
+        final documentData = document.data();
+        return Buzzword(
+          word: documentData['word'] as String,
+          count: documentData['count'] as int,
+        );
+      }).toList();
+    });
   }
 
   @override
@@ -55,26 +64,29 @@ class _BuzzwordBingoScreenState extends State<BuzzwordBingoScreen> {
     super.dispose();
   }
 
-  void _addWord(String word) {
+  void _addWord(String word) async {
+    // 1
     _wordController.clear();
 
-    final existingBuzzwordIndex =
-        List<Buzzword?>.from(_buzzwords).indexWhere((element) {
-      return element!.word == word;
-    });
-    if (existingBuzzwordIndex < 0) {
-      _buzzwords.add(Buzzword(
-        word: word,
-        count: 1,
-      ));
+    // 2
+    final buzzwords = await _buzzwordsCollection
+        .where(
+          'word',
+          isEqualTo: word,
+        )
+        .get();
+    if (buzzwords.size == 0) {
+      // 3
+      await _buzzwordsCollection.add(<String, dynamic>{
+        'word': word,
+        'count': 1,
+      });
     } else {
-      _buzzwords[existingBuzzwordIndex] = Buzzword(
-        word: word,
-        count: _buzzwords[existingBuzzwordIndex].count + 1,
-      );
+      // 4
+      final buzzwordDocument = buzzwords.docs.first;
+      final oldCount = buzzwordDocument.data()['count'] as int;
+      await buzzwordDocument.reference.update({'count': oldCount + 1});
     }
-
-    _buzzwordsStreamController.add(_buzzwords);
   }
 
   Widget _buildBuzzwordCard(Buzzword buzzword) {
@@ -107,7 +119,7 @@ class _BuzzwordBingoScreenState extends State<BuzzwordBingoScreen> {
     return Scaffold(
       appBar: AppBar(
         // TODO: replace with AppConfig-extracted app title
-        title: const Text('BuzzwordBingo'),
+        title: Text(AppConfig.of(context).appTitle),
       ),
       body: SafeArea(
         child: Column(
